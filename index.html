@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="theme-color" content="#0ea5e9" />
+<meta name="description" content="Matches Vision: Real-time Even/Odd and Matches tracking tool for volatility indices. Free, no login required." />
+<title>Matches Vision — Free Digit &amp; Even/Odd Tracker</title>
+<style>
+  :root{
+    --bg:#111827;
+    --card:#1f2937;
+    --card-2:#374151;
+    --border:#374151;
+    --accent:#0ea5e9;
+    --accent-dim:#0ea5e933;
+    --text:#ffffff;
+    --text-dim:#9ca3af;
+    --text-dim2:#6b7280;
+    --even:#0ea5e9;
+    --odd:#f59e0b;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 64px;}
+
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .dot{width:10px;height:10px;border-radius:999px;background:var(--accent);box-shadow:0 0 12px var(--accent);}
+  .brand h1{font-size:1.35rem;margin:0;font-weight:800;letter-spacing:.01em;}
+  .free-badge{
+    font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);background:var(--accent-dim);border:1px solid #0ea5e955;
+    padding:4px 10px;border-radius:999px;
+  }
+  .tagline{color:var(--text-dim);font-size:.9rem;margin:4px 0 24px;}
+
+  .panel{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:20px;margin-bottom:20px;
+  }
+  .panel h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin:0 0 16px;font-weight:700;}
+
+  .controls-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:768px){.controls-grid{grid-template-columns:repeat(4,1fr);align-items:end;}}
+
+  label{display:block;font-size:.75rem;color:var(--text-dim);margin-bottom:6px;font-weight:600;}
+  select,input{
+    width:100%;background:var(--card-2);border:1px solid #4b5563;color:var(--text);
+    padding:10px 12px;border-radius:10px;font-size:.9rem;outline:none;
+  }
+  select:focus,input:focus{border-color:var(--text);}
+  .mode-toggle{display:flex;border:1px solid #4b5563;border-radius:10px;overflow:hidden;}
+  .mode-toggle button{
+    flex:1;padding:10px 8px;background:var(--card-2);color:var(--text-dim);border:none;
+    font-size:.82rem;font-weight:700;cursor:pointer;transition:.15s;
+  }
+  .mode-toggle button.active{background:var(--accent);color:#04202b;}
+
+  .btn{
+    background:var(--accent);color:#04202b;border:none;border-radius:10px;
+    padding:10px 16px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.15s;
+    width:100%;
+  }
+  .btn:hover{opacity:.9;}
+  .btn:disabled{background:#4b5563;color:#fff;opacity:.6;cursor:default;}
+
+  .status-row{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:.85rem;color:var(--text-dim);flex-wrap:wrap;}
+  .status-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--card-2);}
+  .status-pill .dot{width:8px;height:8px;border-radius:999px;}
+  .dot-live{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+  .dot-demo{background:#f59e0b;box-shadow:0 0 8px #f59e0b;}
+  .dot-off{background:#6b7280;}
+
+  .grid-main{display:grid;grid-template-columns:1fr;gap:20px;}
+  @media(min-width:1024px){.grid-main{grid-template-columns:1.3fr 1fr;}}
+
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  .stat-card{background:var(--card-2);border-radius:12px;padding:12px;text-align:center;}
+  .stat-card .val{font-size:1.5rem;font-weight:800;}
+  .stat-card .lbl{font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+
+  .hist{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:10px;}
+  .hist .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+  .bar{width:100%;background:var(--accent);border-radius:6px 6px 0 0;transition:height .3s ease;min-height:2px;position:relative;}
+  .bar.hot{background:#f59e0b;}
+  .bar-pct{font-size:.65rem;color:var(--text-dim);margin-bottom:4px;}
+  .bar-lbl{font-size:.85rem;font-weight:700;margin-top:8px;}
+
+  .eo-bars{display:flex;gap:10px;margin:16px 0;}
+  .eo-bar{flex:1;background:var(--card-2);border-radius:10px;padding:14px;text-align:center;}
+  .eo-bar .pct{font-size:1.8rem;font-weight:800;}
+  .eo-bar.even .pct{color:var(--even);}
+  .eo-bar.odd .pct{color:var(--odd);}
+  .eo-bar .lbl{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+
+  .streak{
+    background:var(--card-2);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;
+    align-items:center;margin-bottom:16px;
+  }
+  .streak .lbl{font-size:.75rem;color:var(--text-dim);}
+  .streak .val{font-weight:800;font-size:1.1rem;}
+  .streak .val.even-c{color:var(--even);}
+  .streak .val.odd-c{color:var(--odd);}
+
+  .seq{display:flex;flex-wrap:wrap;gap:6px;}
+  .seq span{
+    width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:.8rem;font-weight:700;background:var(--card-2);color:var(--text-dim);
+  }
+  .seq span.even-d{background:var(--accent-dim);color:var(--accent);}
+  .seq span.odd-d{background:#f59e0b26;color:var(--odd);}
+
+  .empty{color:var(--text-dim2);font-size:.85rem;text-align:center;padding:40px 0;}
+
+  footer{text-align:center;color:var(--text-dim2);font-size:.78rem;margin-top:30px;line-height:1.6;}
+  footer a{color:var(--accent);text-decoration:none;}
+
+  .banner{
+    background:#f59e0b1a;border:1px solid #f59e0b55;color:#fbbf24;border-radius:10px;
+    padding:10px 14px;font-size:.82rem;margin-bottom:18px;display:none;
+  }
+  .banner.show{display:block;}
+
+  .signal-badge{
+    padding:14px 22px;border-radius:14px;font-weight:800;font-size:1.1rem;letter-spacing:.03em;
+    text-align:center;min-width:150px;
+  }
+  .signal-gathering{background:var(--card-2);color:var(--text-dim);}
+  .signal-over{background:#0ea5e926;color:var(--accent);border:1px solid #0ea5e955;}
+  .signal-under{background:#f59e0b26;color:var(--odd);border:1px solid #f59e0b55;}
+  .signal-neutral{background:#37415180;color:var(--text-dim);border:1px solid #4b5563;}
+
+  .conf-track{height:8px;border-radius:999px;background:var(--card-2);overflow:hidden;}
+  .conf-fill{height:100%;background:linear-gradient(90deg,var(--accent),#22c55e);border-radius:999px;transition:width .4s ease;}
+
+  .ai-reason{
+    background:var(--card-2);border-radius:10px;padding:12px 14px;font-size:.85rem;color:var(--text-dim);line-height:1.6;
+  }
+
+  /* OAuth login button — standard "Sign in with X" convention: neutral surface, brand mark on the left, clear label */
+  .oauth-btn{
+    display:inline-flex;align-items:center;gap:10px;
+    background:#fff;color:#1f2937;border:1px solid #d1d5db;border-radius:10px;
+    padding:10px 18px 10px 10px;font-size:.88rem;font-weight:600;cursor:pointer;
+    transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.15);
+  }
+  .oauth-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.25);border-color:#9ca3af;}
+  .oauth-btn:active{transform:translateY(1px);}
+  .oauth-btn:disabled{opacity:.65;cursor:default;box-shadow:none;}
+  .oauth-mark{
+    width:26px;height:26px;border-radius:7px;background:#ff444f;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .oauth-mark svg{width:15px;height:15px;}
+
+  .account-chip{
+    display:flex;align-items:center;gap:10px;background:var(--card-2);border:1px solid #4b5563;
+    border-radius:999px;padding:6px 14px 6px 6px;
+  }
+  .account-avatar{
+    width:30px;height:30px;border-radius:999px;background:#ff444f;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;flex-shrink:0;
+  }
+  .account-meta{display:flex;flex-direction:column;line-height:1.25;}
+  .account-meta .id{font-size:.85rem;font-weight:700;}
+  .account-meta .cur{font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;}
+  .icon-btn{
+    background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .icon-btn:hover{color:var(--danger);background:#ef444422;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <span class="dot"></span>
+      <h1>Matches Vision</h1>
+    </div>
+    <span class="free-badge">Free · No login required</span>
+  </header>
+  <p class="tagline">Real-time digit distribution and Even/Odd tracking across volatility indices.</p>
+
+  <div class="banner" id="fallbackBanner">Live connection unavailable — switched to Demo mode so you can keep exploring the tool.</div>
+  <div class="banner" id="oauthBanner" style="background:#0ea5e91a;border-color:#0ea5e955;color:#7dd3fc;"></div>
+
+  <div class="panel">
+    <h2>Setup</h2>
+    <div class="controls-grid">
+      <div>
+        <label for="modeToggle">Data source</label>
+        <div class="mode-toggle" id="modeToggle">
+          <button type="button" data-mode="live" class="active">Live</button>
+          <button type="button" data-mode="demo">Demo</button>
+        </div>
+      </div>
+      <div>
+        <label for="symbolSelect">Volatility index</label>
+        <select id="symbolSelect">
+          <option value="R_10">Volatility 10 Index</option>
+          <option value="R_25">Volatility 25 Index</option>
+          <option value="R_50">Volatility 50 Index</option>
+          <option value="R_75" selected>Volatility 75 Index</option>
+          <option value="R_100">Volatility 100 Index</option>
+          <option value="1HZ10V">Volatility 10 (1s) Index</option>
+          <option value="1HZ25V">Volatility 25 (1s) Index</option>
+          <option value="1HZ50V">Volatility 50 (1s) Index</option>
+          <option value="1HZ100V">Volatility 100 (1s) Index</option>
+        </select>
+      </div>
+      <div>
+        <label for="windowSelect">Tick window</label>
+        <select id="windowSelect">
+          <option value="50">Last 50 ticks</option>
+          <option value="100" selected>Last 100 ticks</option>
+          <option value="200">Last 200 ticks</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button class="btn" id="connectBtn">Start tracking</button>
+      </div>
+    </div>
+
+    <div id="appIdRow" style="margin-top:14px;max-width:420px;">
+      <label for="appIdInput">Deriv App ID (used for both anonymous ticks and OAuth login)</label>
+      <input id="appIdInput" type="text" placeholder="1089" />
+    </div>
+
+    <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+      <label style="margin-bottom:10px;">Deriv account</label>
+      <div id="accountLoggedOut" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="oauth-btn" id="oauthBtn">
+          <span class="oauth-mark">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span id="oauthBtnLabel">Login via Deriv</span>
+        </button>
+        <span style="font-size:.75rem;color:var(--text-dim2);">Redirects to Deriv's official login page. This app never sees your password, and never places trades.</span>
+      </div>
+      <div id="accountLoggedIn" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="account-chip">
+          <span class="account-avatar" id="accountAvatar">D</span>
+          <div class="account-meta">
+            <span class="id" id="accountId">—</span>
+            <span class="cur" id="accountCur">—</span>
+          </div>
+          <span id="verifiedBadge" style="display:none;font-size:.68rem;font-weight:700;color:#22c55e;background:#22c55e22;padding:3px 8px;border-radius:999px;">✓ Verified</span>
+          <select id="accountSelect" style="width:auto;padding:4px 8px;display:none;margin-left:4px;"></select>
+          <button class="icon-btn" id="logoutBtn" title="Disconnect">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M16 17l5-5-5-5M21 12H9M13 21H6a2 2 0 01-2-2V5a2 2 0 012-2h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-row">
+      <span class="status-pill"><span class="dot dot-off" id="statusDot"></span><span id="statusText">Not connected</span></span>
+      <span id="tickCountText"></span>
+    </div>
+    <p style="font-size:.72rem;color:var(--text-dim2);margin:10px 0 0;">
+      Market data streams directly from Deriv. Connecting a Deriv account is optional and only used to authenticate your session — this tool only reads tick data and never places trades or touches your balance.
+    </p>
+  </div>
+
+  <div class="grid-main">
+    <div class="panel">
+      <h2>Digit distribution</h2>
+      <div class="stat-row">
+        <div class="stat-card"><div class="val" id="mostFreqVal">—</div><div class="lbl">Most frequent</div></div>
+        <div class="stat-card"><div class="val" id="leastFreqVal">—</div><div class="lbl">Least frequent</div></div>
+        <div class="stat-card"><div class="val" id="totalTicksVal">0</div><div class="lbl">Ticks sampled</div></div>
+      </div>
+      <div class="hist" id="histogram"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div class="panel" style="margin-bottom:0;">
+        <h2>Over / Under tracker</h2>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <label style="margin:0;flex-shrink:0;">Barrier</label>
+          <select id="ouBarrierSelect" style="width:auto;padding:6px 10px;">
+            <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4" selected>4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+          </select>
+          <span style="font-size:.7rem;color:var(--text-dim2);">Over = digit &gt; barrier · Under = digit &lt; barrier · digit = barrier is a tie</span>
+        </div>
+        <div class="eo-bars">
+          <div class="eo-bar even"><div class="pct" id="overPct">0%</div><div class="lbl">Over</div></div>
+          <div class="eo-bar odd"><div class="pct" id="underPct">0%</div><div class="lbl">Under</div></div>
+        </div>
+        <div class="streak" style="margin-bottom:0;">
+          <span class="lbl">Ties (digit = barrier)</span>
+          <span class="val" id="tiePct">—</span>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:0;">
+        <h2>Even / Odd tracker</h2>
+        <div class="eo-bars">
+          <div class="eo-bar even"><div class="pct" id="evenPct">0%</div><div class="lbl">Even</div></div>
+          <div class="eo-bar odd"><div class="pct" id="oddPct">0%</div><div class="lbl">Odd</div></div>
+        </div>
+        <div class="streak">
+          <span class="lbl">Current streak</span>
+          <span class="val" id="streakVal">—</span>
+        </div>
+        <h2 style="margin-top:20px;">Last digits</h2>
+        <div class="seq" id="seqRow"><div class="empty">Start tracking to see live digits</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="aiPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <h2 style="margin:0;">AI Signal Engine</h2>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div>
+          <label style="margin-bottom:4px;">Barrier</label>
+          <select id="barrierSelect" style="width:auto;padding:6px 10px;">
+            <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4" selected>4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+          </select>
+        </div>
+        <div>
+          <label style="margin-bottom:4px;">Recalculate every</label>
+          <select id="refreshSelect" style="width:auto;padding:6px 10px;">
+            <option value="10">10s</option>
+            <option value="15" selected>15s</option>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;" id="aiGrid">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div id="signalBadge" class="signal-badge signal-gathering">GATHERING DATA</div>
+        <div style="flex:1;min-width:160px;">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-dim);margin-bottom:4px;">
+            <span>Confidence</span><span id="confidenceVal">—</span>
+          </div>
+          <div class="conf-track"><div class="conf-fill" id="confidenceFill" style="width:0%"></div></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.4rem;font-weight:800;" id="countdownVal">—</div>
+          <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;">Next signal</div>
+        </div>
+      </div>
+
+      <div class="ai-reason" id="aiReason">Start tracking to let the engine build a live sample. It needs at least 20 ticks before issuing a first read.</div>
+
+      <div class="banner show" style="background:#0ea5e91a;border-color:#0ea5e955;color:#7dd3fc;">
+        Statistical read of the current window only — not a prediction. Volatility index digits are produced by a certified random number generator; no analysis can guarantee the next outcome. Trade at your own discretion and risk.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Matches Vision is a free, standalone tracking tool. It does not place trades, hold funds, or require an account.<br/>
+    Digit outcomes on volatility indices are randomly generated and historical patterns do not predict future results.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const els = {
+    modeToggle: document.getElementById('modeToggle'),
+    symbolSelect: document.getElementById('symbolSelect'),
+    windowSelect: document.getElementById('windowSelect'),
+    appIdInput: document.getElementById('appIdInput'),
+    appIdRow: document.getElementById('appIdRow'),
+    connectBtn: document.getElementById('connectBtn'),
+    statusDot: document.getElementById('statusDot'),
+    statusText: document.getElementById('statusText'),
+    tickCountText: document.getElementById('tickCountText'),
+    histogram: document.getElementById('histogram'),
+    mostFreqVal: document.getElementById('mostFreqVal'),
+    leastFreqVal: document.getElementById('leastFreqVal'),
+    totalTicksVal: document.getElementById('totalTicksVal'),
+    evenPct: document.getElementById('evenPct'),
+    oddPct: document.getElementById('oddPct'),
+    streakVal: document.getElementById('streakVal'),
+    seqRow: document.getElementById('seqRow'),
+    fallbackBanner: document.getElementById('fallbackBanner'),
+    barrierSelect: document.getElementById('barrierSelect'),
+    refreshSelect: document.getElementById('refreshSelect'),
+    signalBadge: document.getElementById('signalBadge'),
+    confidenceVal: document.getElementById('confidenceVal'),
+    confidenceFill: document.getElementById('confidenceFill'),
+    countdownVal: document.getElementById('countdownVal'),
+    aiReason: document.getElementById('aiReason'),
+    ouBarrierSelect: document.getElementById('ouBarrierSelect'),
+    overPct: document.getElementById('overPct'),
+    underPct: document.getElementById('underPct'),
+    tiePct: document.getElementById('tiePct'),
+    oauthBtn: document.getElementById('oauthBtn'),
+    oauthBtnLabel: document.getElementById('oauthBtnLabel'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    accountLoggedOut: document.getElementById('accountLoggedOut'),
+    accountLoggedIn: document.getElementById('accountLoggedIn'),
+    accountAvatar: document.getElementById('accountAvatar'),
+    accountId: document.getElementById('accountId'),
+    accountCur: document.getElementById('accountCur'),
+    accountSelect: document.getElementById('accountSelect'),
+    verifiedBadge: document.getElementById('verifiedBadge'),
+    oauthBanner: document.getElementById('oauthBanner'),
+  };
+
+  let mode = 'live';
+  let ws = null;
+  let demoTimer = null;
+  let connectTimeout = null;
+  let pingInterval = null;
+  let reconnectAttempts = 0;
+  let reconnectTimer = null;
+  let digits = [];
+  let running = false;
+  let aiCountdownTimer = null;
+  let aiSecondsLeft = 0;
+  const MIN_AI_SAMPLE = 20;
+  let derivAccounts = []; // [{loginid, token, currency}]
+  let activeAccount = null;
+  let accountVerified = false;
+
+  function buildHistogram(){
+    els.histogram.innerHTML = '';
+    for(let d=0; d<10; d++){
+      const col = document.createElement('div');
+      col.className = 'bar-col';
+      col.innerHTML = `<div class="bar-pct" id="pct-${d}">0%</div><div class="bar" id="bar-${d}" style="height:2px"></div><div class="bar-lbl">${d}</div>`;
+      els.histogram.appendChild(col);
+    }
+  }
+  buildHistogram();
+
+  function setStatus(state, text){
+    els.statusDot.className = 'dot ' + (state === 'live' ? 'dot-live' : state === 'demo' ? 'dot-demo' : 'dot-off');
+    els.statusText.textContent = text;
+  }
+
+  function setMode(newMode){
+    mode = newMode;
+    [...els.modeToggle.children].forEach(btn => btn.classList.toggle('active', btn.dataset.mode === newMode));
+    els.appIdRow.style.display = newMode === 'live' ? 'block' : 'none';
+    els.symbolSelect.disabled = false;
+  }
+  els.modeToggle.addEventListener('click', (e) => {
+    if(e.target.tagName !== 'BUTTON') return;
+    stopTracking();
+    setMode(e.target.dataset.mode);
+  });
+
+  function extractLastDigit(quote){
+    const str = String(quote).replace('.', '');
+    return parseInt(str.charAt(str.length - 1), 10);
+  }
+
+  function pushDigit(d){
+    const windowSize = parseInt(els.windowSelect.value, 10);
+    digits.push(d);
+    if(digits.length > windowSize) digits.shift();
+    render();
+  }
+
+  function render(){
+    const total = digits.length;
+    els.totalTicksVal.textContent = total;
+    els.tickCountText.textContent = total ? `${total} tick${total===1?'':'s'} in window` : '';
+
+    const counts = new Array(10).fill(0);
+    digits.forEach(d => counts[d]++);
+    const maxCount = Math.max(...counts, 0);
+
+    let mostIdx = 0, leastIdx = 0;
+    if(total > 0){
+      mostIdx = counts.indexOf(Math.max(...counts));
+      leastIdx = counts.indexOf(Math.min(...counts));
+    }
+    els.mostFreqVal.textContent = total ? mostIdx : '—';
+    els.leastFreqVal.textContent = total ? leastIdx : '—';
+
+    for(let d=0; d<10; d++){
+      const pct = total ? Math.round((counts[d] / total) * 100) : 0;
+      const barEl = document.getElementById('bar-' + d);
+      const pctEl = document.getElementById('pct-' + d);
+      const heightPx = total ? Math.max(2, (counts[d] / (maxCount || 1)) * 150) : 2;
+      barEl.style.height = heightPx + 'px';
+      barEl.classList.toggle('hot', total > 0 && counts[d] === maxCount && maxCount > 0);
+      pctEl.textContent = pct + '%';
+    }
+
+    const evenCount = digits.filter(d => d % 2 === 0).length;
+    const oddCount = total - evenCount;
+    els.evenPct.textContent = total ? Math.round((evenCount/total)*100) + '%' : '0%';
+    els.oddPct.textContent = total ? Math.round((oddCount/total)*100) + '%' : '0%';
+
+    const ouBarrier = parseInt(els.ouBarrierSelect.value, 10);
+    const overCountOU = digits.filter(d => d > ouBarrier).length;
+    const underCountOU = digits.filter(d => d < ouBarrier).length;
+    const tieCountOU = digits.filter(d => d === ouBarrier).length;
+    els.overPct.textContent = total ? Math.round((overCountOU/total)*100) + '%' : '0%';
+    els.underPct.textContent = total ? Math.round((underCountOU/total)*100) + '%' : '0%';
+    els.tiePct.textContent = total ? Math.round((tieCountOU/total)*100) + '%' : '—';
+
+    if(total){
+      let streak = 1;
+      const lastType = digits[total-1] % 2;
+      for(let i=total-2; i>=0; i--){
+        if(digits[i] % 2 === lastType) streak++; else break;
+      }
+      els.streakVal.textContent = `${streak} ${lastType === 0 ? 'Even' : 'Odd'} in a row`;
+      els.streakVal.className = 'val ' + (lastType === 0 ? 'even-c' : 'odd-c');
+    } else {
+      els.streakVal.textContent = '—';
+      els.streakVal.className = 'val';
+    }
+
+    if(total){
+      const last20 = digits.slice(-20);
+      els.seqRow.innerHTML = last20.map(d =>
+        `<span class="${d % 2 === 0 ? 'even-d' : 'odd-d'}">${d}</span>`
+      ).join('');
+    } else {
+      els.seqRow.innerHTML = '<div class="empty">Start tracking to see live digits</div>';
+    }
+  }
+
+  function computeAiSignal(){
+    const total = digits.length;
+    const barrier = parseInt(els.barrierSelect.value, 10);
+
+    if(total < MIN_AI_SAMPLE){
+      els.signalBadge.textContent = 'GATHERING DATA';
+      els.signalBadge.className = 'signal-badge signal-gathering';
+      els.confidenceVal.textContent = '—';
+      els.confidenceFill.style.width = '0%';
+      els.aiReason.textContent = `Needs at least ${MIN_AI_SAMPLE} ticks in the window — currently at ${total}.`;
+      return;
+    }
+
+    const overCount = digits.filter(d => d > barrier).length;
+    const underCount = total - overCount;
+    const overPct = overCount / total;
+    const underPct = underCount / total;
+
+    // Deviation from the theoretical 50/50 split for this barrier, scaled into a confidence read.
+    // Capped well short of 100 — a stats read of a random stream should never claim certainty.
+    const deviation = Math.abs(overPct - 0.5) * 2; // 0 (even split) .. 1 (fully one-sided)
+    let confidence = Math.round(50 + deviation * 42);
+    confidence = Math.min(confidence, 92);
+
+    let signal, badgeClass, sideLabel;
+    if(overCount === underCount){
+      signal = 'NEUTRAL'; badgeClass = 'signal-neutral'; sideLabel = 'No edge';
+    } else if(overPct > underPct){
+      signal = `OVER ${barrier}`; badgeClass = 'signal-over'; sideLabel = 'Over';
+    } else {
+      signal = `UNDER ${barrier}`; badgeClass = 'signal-under'; sideLabel = 'Under';
+    }
+
+    els.signalBadge.textContent = signal;
+    els.signalBadge.className = 'signal-badge ' + badgeClass;
+    els.confidenceVal.textContent = confidence + '%';
+    els.confidenceFill.style.width = confidence + '%';
+
+    els.aiReason.textContent = signal === 'NEUTRAL'
+      ? `Last ${total} ticks split exactly evenly across the barrier of ${barrier} (${overCount} over / ${underCount} under). No statistical edge right now — sit this one out.`
+      : `Last ${total} ticks: ${overCount} over ${barrier} (${Math.round(overPct*100)}%) vs ${underCount} under (${Math.round(underPct*100)}%). ${sideLabel} currently dominates this window — confidence reflects how far that split sits from a random 50/50, not a guarantee of the next tick.`;
+  }
+
+  function startAiCycle(){
+    stopAiCycle();
+    computeAiSignal();
+    aiSecondsLeft = parseInt(els.refreshSelect.value, 10);
+    els.countdownVal.textContent = aiSecondsLeft + 's';
+    aiCountdownTimer = setInterval(() => {
+      aiSecondsLeft--;
+      if(aiSecondsLeft <= 0){
+        computeAiSignal();
+        aiSecondsLeft = parseInt(els.refreshSelect.value, 10);
+      }
+      els.countdownVal.textContent = aiSecondsLeft + 's';
+    }, 1000);
+  }
+
+  function stopAiCycle(){
+    if(aiCountdownTimer){ clearInterval(aiCountdownTimer); aiCountdownTimer = null; }
+    els.countdownVal.textContent = '—';
+  }
+
+  els.barrierSelect.addEventListener('change', () => { if(running) computeAiSignal(); });
+  els.refreshSelect.addEventListener('change', () => { if(running) startAiCycle(); });
+
+  function parseOauthRedirect(){
+    const params = new URLSearchParams(window.location.search);
+    const accounts = [];
+    let i = 1;
+    while(params.has('acct' + i)){
+      accounts.push({
+        loginid: params.get('acct' + i),
+        token: params.get('token' + i),
+        currency: params.get('cur' + i) || ''
+      });
+      i++;
+    }
+    if(accounts.length > 0){
+      derivAccounts = accounts;
+      activeAccount = accounts[0];
+      try{ localStorage.setItem('mv_deriv_accounts', JSON.stringify(accounts)); }catch(e){}
+      // Strip tokens out of the visible URL/history immediately — they shouldn't linger there
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      return true;
+    }
+    return false;
+  }
+
+  function loadStoredAccounts(){
+    try{
+      const raw = localStorage.getItem('mv_deriv_accounts');
+      if(raw){
+        derivAccounts = JSON.parse(raw);
+        activeAccount = derivAccounts[0] || null;
+      }
+    }catch(e){}
+  }
+
+  function updateAccountUI(){
+    if(activeAccount){
+      els.accountLoggedOut.style.display = 'none';
+      els.accountLoggedIn.style.display = 'flex';
+      els.accountAvatar.textContent = (activeAccount.loginid || 'D').charAt(0);
+      els.accountId.textContent = activeAccount.loginid;
+      els.accountCur.textContent = activeAccount.currency || '';
+      els.verifiedBadge.style.display = accountVerified ? 'inline-block' : 'none';
+      if(derivAccounts.length > 1){
+        els.accountSelect.style.display = 'inline-block';
+        els.accountSelect.innerHTML = derivAccounts.map(a =>
+          `<option value="${a.loginid}" ${a.loginid === activeAccount.loginid ? 'selected' : ''}>${a.loginid} (${a.currency})</option>`
+        ).join('');
+      } else {
+        els.accountSelect.style.display = 'none';
+      }
+    } else {
+      els.accountLoggedOut.style.display = 'flex';
+      els.accountLoggedIn.style.display = 'none';
+    }
+  }
+
+  function showOauthBanner(text, autoHideMs){
+    els.oauthBanner.textContent = text;
+    els.oauthBanner.classList.add('show');
+    if(autoHideMs){
+      setTimeout(() => { els.oauthBanner.classList.remove('show'); }, autoHideMs);
+    }
+  }
+
+  function verifyAccount(){
+    if(!activeAccount || !activeAccount.token) return;
+    const appId = (els.appIdInput.value || '').trim() || '1089';
+    showOauthBanner('Verifying your Deriv login…');
+    let settled = false;
+    let vws;
+    try{
+      vws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(appId)}`);
+    }catch(err){
+      showOauthBanner('Could not reach Deriv to verify login — you can still try Start tracking.', 6000);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      if(!settled){ settled = true; vws.close(); showOauthBanner('Verification timed out — you can still try Start tracking.', 6000); }
+    }, 8000);
+    vws.onopen = () => { vws.send(JSON.stringify({ authorize: activeAccount.token })); };
+    vws.onmessage = (msg) => {
+      let data; try{ data = JSON.parse(msg.data); }catch(e){ return; }
+      if(data.msg_type === 'authorize' && !settled){
+        settled = true; clearTimeout(timeout);
+        if(data.error){
+          accountVerified = false;
+          derivAccounts = []; activeAccount = null;
+          try{ localStorage.removeItem('mv_deriv_accounts'); }catch(e){}
+          updateAccountUI();
+          showOauthBanner('Deriv could not verify that login — please try "Login via Deriv" again.', 7000);
+        } else {
+          accountVerified = true;
+          activeAccount.currency = data.authorize.currency || activeAccount.currency;
+          activeAccount.loginid = data.authorize.loginid || activeAccount.loginid;
+          updateAccountUI();
+          showOauthBanner(`Deriv login verified — you're fully connected as ${data.authorize.loginid}.`, 5000);
+        }
+        vws.close();
+      }
+    };
+    vws.onerror = () => {
+      if(!settled){ settled = true; clearTimeout(timeout); showOauthBanner('Could not reach Deriv to verify login — you can still try Start tracking.', 6000); }
+    };
+  }
+
+  els.oauthBtn.addEventListener('click', () => {
+    const appId = (els.appIdInput.value || '').trim() || '1089';
+    els.oauthBtn.disabled = true;
+    els.oauthBtnLabel.textContent = 'Redirecting to Deriv…';
+    window.location.href = `https://oauth.deriv.com/oauth2/authorize?app_id=${encodeURIComponent(appId)}&l=en`;
+  });
+
+  els.logoutBtn.addEventListener('click', () => {
+    derivAccounts = [];
+    activeAccount = null;
+    accountVerified = false;
+    try{ localStorage.removeItem('mv_deriv_accounts'); }catch(e){}
+    updateAccountUI();
+    if(running){ els.connectBtn.click(); } // stop any active session cleanly since auth changed
+  });
+
+  els.accountSelect.addEventListener('change', () => {
+    activeAccount = derivAccounts.find(a => a.loginid === els.accountSelect.value) || activeAccount;
+    updateAccountUI();
+  });
+
+  function startDemo(){
+    setStatus('demo', 'Demo mode — simulated ticks');
+    demoTimer = setInterval(() => {
+      pushDigit(Math.floor(Math.random() * 10));
+    }, 700);
+  }
+
+  function startLive(){
+    const appId = (els.appIdInput.value || '').trim() || '1089';
+    const symbol = els.symbolSelect.value;
+    setStatus('off', 'Connecting…');
+
+    try{
+      ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(appId)}`);
+    }catch(err){
+      fallbackToDemo();
+      return;
+    }
+
+    connectTimeout = setTimeout(() => {
+      if(ws && ws.readyState !== WebSocket.OPEN){
+        ws.close();
+        fallbackToDemo();
+      }
+    }, 8000);
+
+    ws.onopen = () => {
+      clearTimeout(connectTimeout);
+      reconnectAttempts = 0;
+      pingInterval = setInterval(() => {
+        if(ws && ws.readyState === WebSocket.OPEN){
+          ws.send(JSON.stringify({ ping: 1 }));
+        }
+      }, 25000);
+
+      if(activeAccount && activeAccount.token){
+        setStatus('off', 'Authorizing account…');
+        ws.send(JSON.stringify({ authorize: activeAccount.token }));
+      } else {
+        setStatus('live', `Live — ${symbol} · direct feed, no login`);
+        ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
+      }
+    };
+
+    ws.onmessage = (msg) => {
+      let data;
+      try{ data = JSON.parse(msg.data); }catch(e){ return; }
+
+      if(data.msg_type === 'authorize'){
+        if(data.error){
+          // Token expired/invalid — fall back to anonymous live data rather than failing the session
+          setStatus('live', `Live — ${symbol} · session token invalid, using public feed`);
+          derivAccounts = []; activeAccount = null; accountVerified = false;
+          try{ localStorage.removeItem('mv_deriv_accounts'); }catch(e){}
+          updateAccountUI();
+        } else {
+          accountVerified = true;
+          updateAccountUI();
+          setStatus('live', `Live — ${symbol} · ${data.authorize.loginid} (${data.authorize.currency})`);
+        }
+        ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }));
+        return;
+      }
+
+      if(data.msg_type === 'tick' && data.tick && typeof data.tick.quote !== 'undefined'){
+        pushDigit(extractLastDigit(data.tick.quote));
+      }
+      if(data.error){
+        ws.close();
+        fallbackToDemo();
+      }
+    };
+
+    ws.onerror = () => { fallbackToDemo(); };
+    ws.onclose = () => {
+      if(pingInterval){ clearInterval(pingInterval); pingInterval = null; }
+      if(!running || mode !== 'live') return;
+      // Unexpected drop mid-session: try to reconnect with backoff instead of silently dying
+      reconnectAttempts++;
+      if(reconnectAttempts <= 5){
+        setStatus('off', `Reconnecting… (attempt ${reconnectAttempts})`);
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 15000);
+        reconnectTimer = setTimeout(() => { if(running && mode === 'live') startLive(); }, delay);
+      } else {
+        fallbackToDemo();
+      }
+    };
+  }
+
+  function fallbackToDemo(){
+    if(!running) return;
+    els.fallbackBanner.classList.add('show');
+    stopTracking(true);
+    startDemo();
+  }
+
+  function stopTracking(keepDigits){
+    if(ws){ ws.onclose = null; ws.close(); ws = null; }
+    if(demoTimer){ clearInterval(demoTimer); demoTimer = null; }
+    if(connectTimeout){ clearTimeout(connectTimeout); connectTimeout = null; }
+    if(pingInterval){ clearInterval(pingInterval); pingInterval = null; }
+    if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer = null; }
+    reconnectAttempts = 0;
+    if(!keepDigits){ digits = []; render(); }
+  }
+
+  els.connectBtn.addEventListener('click', () => {
+    if(running){
+      running = false;
+      stopTracking();
+      stopAiCycle();
+      setStatus('off', 'Not connected');
+      els.connectBtn.textContent = 'Start tracking';
+      return;
+    }
+    running = true;
+    digits = [];
+    els.fallbackBanner.classList.remove('show');
+    els.connectBtn.textContent = 'Stop tracking';
+    if(mode === 'live'){ startLive(); } else { startDemo(); }
+    startAiCycle();
+  });
+
+  els.windowSelect.addEventListener('change', () => {
+    const windowSize = parseInt(els.windowSelect.value, 10);
+    if(digits.length > windowSize) digits = digits.slice(-windowSize);
+    render();
+  });
+
+  els.ouBarrierSelect.addEventListener('change', render);
+
+  if(!parseOauthRedirect()){ loadStoredAccounts(); }
+  updateAccountUI();
+  if(activeAccount){ verifyAccount(); }
+  render();
+})();
+</script>
+</body>
+</html>
